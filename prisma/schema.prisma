@@ -1,0 +1,61 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+enum UserRoles {
+    ORGANIZER
+    PARTICIPANT
+}
+
+model User {
+    id       String    @id @default(uuid())
+    email    String    @unique
+    password String
+    name     String
+    role     UserRoles
+
+    questions Question[]
+    answers   Answer[]
+
+    created_at DateTime @default(now())
+    updated_at DateTime @default(now()) @updatedAt
+
+    @@map("users")
+}
+
+model Question {
+    id       String @id @default(uuid())
+    question String
+
+    created_by_user_id String?
+    created_by_user    User?   @relation(fields: [created_by_user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+    answers Answer[]
+
+    created_at DateTime @default(now())
+    updated_at DateTime @default(now()) @updatedAt
+
+    @@map("questions")
+}
+
+model Answer {
+    id     String @id @default(uuid())
+    answer String
+
+    question_id String
+    question    Question @relation(fields: [question_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+    answer_by_user_id String
+    answer_by_user    User?  @relation(fields: [answer_by_user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+    created_at DateTime @default(now())
+    updated_at DateTime @default(now()) @updatedAt
+
+    @@unique([question_id, answer_by_user_id])
+    @@map("answers")
+}
