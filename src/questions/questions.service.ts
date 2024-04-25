@@ -8,11 +8,11 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
 import { Prisma } from '@prisma/client';
-import { PaginationResultDto } from '../commom/pagination/pagination-result.dto';
-import { QuestionEntity } from './entities/question.entity';
+import { PaginationResultDto } from '../common/pagination/pagination-result.dto';
 import { QuestionPaginationDto } from './dto/question.pagination';
 import { QuestionAnswersPaginationDto } from './dto/question-answers.pagination';
 import { AnswerEntity } from '../answers/entities/answer.entity';
+import { QuestionEntity } from './entities/question.entity';
 
 @Injectable()
 export class QuestionService {
@@ -59,11 +59,18 @@ export class QuestionService {
     return pagination.createMetadata(resultsWithAnsweredFlag, total);
   }
 
-  findOne(id: string) {
-    return this.prismaService.question.findUnique({
+  async findOne(id: string, authenticated_user_id: string) {
+    const question = await this.prismaService.question.findUnique({
       where: { id },
       include: this.#includeFields,
     });
+
+    return {
+      ...question,
+      answered_by_me: question.answers.some(
+        (answer) => answer.answer_by_user_id === authenticated_user_id,
+      ),
+    };
   }
 
   async update(

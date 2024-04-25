@@ -12,18 +12,15 @@ import {
   Req,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import { ApiPaginatedResponse } from '../commom/pagination/api-paginated-response';
-import { PaginationResultDto } from '../commom/pagination/pagination-result.dto';
+import { ApiPaginatedResponse } from '../common/pagination/api-paginated-response';
+import { PaginationResultDto } from '../common/pagination/pagination-result.dto';
 import { AnswersService } from './answers.service';
 import { CreateAnswerDto } from './dto/create-answer.dto';
 import { AnswerEntity } from './entities/answer.entity';
 import { AnswerPaginationDto } from './dto/answer.pagination';
 import { UpdateAnswerDto } from './dto/update-answer.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RequiredRole } from '../auth/decorators/permissions.decorator';
-import { UserRoles } from '@prisma/client';
-import { RoleGuard } from '../auth/guards/permissions.guard';
-import { RequestWithUser } from '../commom/interfaces/request-with-user.interface';
+import { RequestWithUser } from '../common/interfaces/request-with-user.interface';
 
 @ApiTags('Answers')
 @Controller('answers')

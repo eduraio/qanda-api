@@ -9,7 +9,7 @@ export class PaginationResultDto<T> {
   @ApiProperty()
   total: number;
 
-  @ApiProperty({ default: 100 })
+  @ApiProperty({ default: 25 })
   limit: number;
 
   @ApiProperty({ default: 0 })

@@ -3,7 +3,7 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { PrismaClientExceptionFilter } from 'nestjs-prisma';
-import { PaginationQueryDto } from './commom/pagination/pagination-query.dto';
+import { PaginationQueryDto } from './common/pagination/pagination-query.dto';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

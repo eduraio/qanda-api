@@ -12,8 +12,8 @@ import {
   Req,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import { ApiPaginatedResponse } from '../commom/pagination/api-paginated-response';
-import { PaginationResultDto } from '../commom/pagination/pagination-result.dto';
+import { ApiPaginatedResponse } from '../common/pagination/api-paginated-response';
+import { PaginationResultDto } from '../common/pagination/pagination-result.dto';
 import { QuestionService } from './questions.service';
 import { QuestionEntity } from './entities/question.entity';
 import { CreateQuestionDto } from './dto/create-question.dto';
@@ -23,9 +23,10 @@ import { UserRoles } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RequiredRole } from '../auth/decorators/permissions.decorator';
 import { RoleGuard } from '../auth/guards/permissions.guard';
-import { RequestWithUser } from '../commom/interfaces/request-with-user.interface';
+import { RequestWithUser } from '../common/interfaces/request-with-user.interface';
 import { AnswerEntity } from '../answers/entities/answer.entity';
 import { QuestionAnswersPaginationDto } from './dto/question-answers.pagination';
+import { QuestionWithAnsweredFlag } from './entities/question-with-answered-flag.entity';
 
 @ApiTags('Questions')
 @Controller('questions')
@@ -50,8 +51,7 @@ export class QuestionsController {
   @Get()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiPaginatedResponse(QuestionEntity)
-  @ApiOkResponse({ type: QuestionEntity, isArray: true })
+  @ApiPaginatedResponse(QuestionWithAnsweredFlag)
   async findAll(
     @Req() request: RequestWithUser,
     @Query() pagination: QuestionPaginationDto,
@@ -62,9 +62,9 @@ export class QuestionsController {
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOkResponse({ type: QuestionEntity })
-  async findOne(@Param('id') id: string) {
-    const question = await this.questionService.findOne(id);
+  @ApiOkResponse({ type: QuestionWithAnsweredFlag })
+  async findOne(@Req() request: RequestWithUser, @Param('id') id: string) {
+    const question = await this.questionService.findOne(id, request.user.id);
 
     if (!question) throw new NotFoundException(`Question Not Found (${id})`);
 

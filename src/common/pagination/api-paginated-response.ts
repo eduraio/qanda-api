@@ -20,7 +20,7 @@ export const ApiPaginatedResponse = <TModel extends Type<any>>(
     @ApiProperty()
     total: number;
 
-    @ApiProperty({ default: 100 })
+    @ApiProperty({ default: 25 })
     limit: number;
 
     @ApiProperty({ default: 0 })
