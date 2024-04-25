@@ -24,6 +24,8 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RequiredRole } from '../auth/decorators/permissions.decorator';
 import { RoleGuard } from '../auth/guards/permissions.guard';
 import { RequestWithUser } from '../commom/interfaces/request-with-user.interface';
+import { AnswerEntity } from '../answers/entities/answer.entity';
+import { QuestionAnswersPaginationDto } from './dto/question-answers.pagination';
 
 @ApiTags('Questions')
 @Controller('questions')
@@ -51,9 +53,10 @@ export class QuestionsController {
   @ApiPaginatedResponse(QuestionEntity)
   @ApiOkResponse({ type: QuestionEntity, isArray: true })
   async findAll(
+    @Req() request: RequestWithUser,
     @Query() pagination: QuestionPaginationDto,
-  ): Promise<PaginationResultDto<QuestionEntity>> {
-    return await this.questionService.findAll(pagination);
+  ) {
+    return await this.questionService.findAll(pagination, request.user.id);
   }
 
   @Get(':id')
@@ -74,17 +77,35 @@ export class QuestionsController {
   @ApiBearerAuth()
   @ApiOkResponse({ type: QuestionEntity })
   async update(
+    @Req() request: RequestWithUser,
     @Param('id') id: string,
     @Body() updateQuestionDto: UpdateQuestionDto,
   ) {
-    return await this.questionService.update(id, updateQuestionDto);
+    return await this.questionService.update(
+      id,
+      updateQuestionDto,
+      request.user.id,
+    );
   }
 
   @Delete(':id')
   @RequiredRole(UserRoles.ORGANIZER)
   @UseGuards(JwtAuthGuard, RoleGuard)
   @ApiBearerAuth()
-  async remove(@Param('id') id: string) {
-    return await this.questionService.remove(id);
+  async remove(@Req() request: RequestWithUser, @Param('id') id: string) {
+    return await this.questionService.remove(id, request.user.id);
+  }
+
+  @Get(':id/answers')
+  @RequiredRole(UserRoles.ORGANIZER)
+  @UseGuards(JwtAuthGuard, RoleGuard)
+  @ApiBearerAuth()
+  @ApiPaginatedResponse(AnswerEntity)
+  @ApiOkResponse({ type: AnswerEntity, isArray: true })
+  async findAnswersByQuestionId(
+    @Param('id') id: string,
+    @Query() pagination: QuestionAnswersPaginationDto,
+  ): Promise<PaginationResultDto<AnswerEntity>> {
+    return await this.questionService.findAnswersByQuestionId(id, pagination);
   }
 }

@@ -8,15 +8,16 @@ import {
   Delete,
   NotFoundException,
   Query,
+  UseGuards,
+  Req,
 } from '@nestjs/common';
-import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { UserService } from './users.service';
 import { UserEntity } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { ApiPaginatedResponse } from '../commom/pagination/api-paginated-response';
-import { UserPaginationDto } from './dto/user.pagination';
-import { PaginationResultDto } from '../commom/pagination/pagination-result.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RequestWithUser } from '../commom/interfaces/request-with-user.interface';
 
 @ApiTags('Users')
 @Controller('users')
@@ -33,19 +34,12 @@ export class UsersController {
     };
   }
 
-  @Get()
-  @ApiPaginatedResponse(UserEntity)
-  @ApiOkResponse({ type: UserEntity, isArray: true })
-  async findAll(
-    @Query() pagination: UserPaginationDto,
-  ): Promise<PaginationResultDto<UserEntity>> {
-    return await this.userService.findAll(pagination);
-  }
-
   @Get(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOkResponse({ type: UserEntity })
-  async findOne(@Param('id') id: string) {
-    const user = await this.userService.findOne(id);
+  async findOne(@Req() request: RequestWithUser, @Param('id') id: string) {
+    const user = await this.userService.findOne(id, request.user.id);
 
     if (!user) throw new NotFoundException(`User Not Found (${id})`);
 
@@ -56,9 +50,19 @@ export class UsersController {
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOkResponse({ type: UserEntity })
-  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    const user = await this.userService.update(id, updateUserDto);
+  async update(
+    @Req() request: RequestWithUser,
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    const user = await this.userService.update(
+      id,
+      updateUserDto,
+      request.user.id,
+    );
     return {
       ...user,
       password: undefined,
@@ -66,8 +70,10 @@ export class UsersController {
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    const user = await this.userService.remove(id);
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async remove(@Req() request: RequestWithUser, @Param('id') id: string) {
+    const user = await this.userService.remove(id, request.user.id);
     return {
       ...user,
       password: undefined,

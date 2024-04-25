@@ -42,24 +42,23 @@ export class AnswersController {
   }
 
   @Get()
-  @RequiredRole(UserRoles.ORGANIZER)
-  @UseGuards(JwtAuthGuard, RoleGuard)
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiPaginatedResponse(AnswerEntity)
   @ApiOkResponse({ type: AnswerEntity, isArray: true })
   async findAll(
+    @Req() request: RequestWithUser,
     @Query() pagination: AnswerPaginationDto,
   ): Promise<PaginationResultDto<AnswerEntity>> {
-    return await this.answersService.findAll(pagination);
+    return await this.answersService.findAll(pagination, request.user);
   }
 
   @Get(':id')
-  @RequiredRole(UserRoles.ORGANIZER)
-  @UseGuards(JwtAuthGuard, RoleGuard)
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOkResponse({ type: AnswerEntity })
-  async findOne(@Param('id') id: string) {
-    const answer = await this.answersService.findOne(id);
+  async findOne(@Req() request: RequestWithUser, @Param('id') id: string) {
+    const answer = await this.answersService.findOne(id, request.user);
 
     if (!answer) throw new NotFoundException(`Answer Not Found (${id})`);
 
@@ -71,16 +70,22 @@ export class AnswersController {
   @ApiBearerAuth()
   @ApiOkResponse({ type: AnswerEntity })
   async update(
+    @Req() request: RequestWithUser,
+
     @Param('id') id: string,
     @Body() updateAnswerDto: UpdateAnswerDto,
   ) {
-    return await this.answersService.update(id, updateAnswerDto);
+    return await this.answersService.update(
+      id,
+      updateAnswerDto,
+      request.user.id,
+    );
   }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async remove(@Param('id') id: string) {
-    return await this.answersService.remove(id);
+  async remove(@Req() request: RequestWithUser, @Param('id') id: string) {
+    return await this.answersService.remove(id, request.user.id);
   }
 }

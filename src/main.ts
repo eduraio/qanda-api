@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { PrismaClientExceptionFilter } from 'nestjs-prisma';
+import { PaginationQueryDto } from './commom/pagination/pagination-query.dto';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -14,7 +15,12 @@ async function bootstrap() {
     .addBearerAuth()
     .build();
 
-  const document = SwaggerModule.createDocument(app, config);
+  const document = SwaggerModule.createDocument(app, config, {
+    extraModels: [PaginationQueryDto],
+    operationIdFactory(_controllerKey, methodKey) {
+      return methodKey;
+    },
+  });
   SwaggerModule.setup('docs', app, document);
 
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
