@@ -53,8 +53,7 @@ export class AnswersController {
   @ApiBearerAuth()
   @ApiOkResponse({ type: AnswerEntity })
   async findOne(@Req() request: RequestWithUser, @Param('id') id: string) {
-    const answer = await this.answersService.findOne(id, request.user);
-    return answer;
+    return await this.answersService.findOne(id, request.user);
   }
 
   @Patch(':id')

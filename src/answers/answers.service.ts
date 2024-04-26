@@ -107,6 +107,8 @@ export class AnswersService {
         HttpStatus.UNAUTHORIZED,
       );
 
+    if (!answer) throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
+
     return answer;
   }
 
