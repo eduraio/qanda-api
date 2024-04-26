@@ -209,6 +209,15 @@ describe('answersService', () => {
       }
     });
     it('FindOne', async () => {
+      const answerEntity: Partial<AnswerEntity> = {
+        id: answer_uuid,
+        answer: 'answer',
+        answer_by_user_id: authenticated_participant_user.id,
+        question_id: question_uuid,
+      };
+
+      mockPrismaService.answer.findUnique.mockReturnValueOnce(answerEntity);
+
       await answersService.findOne(answer_uuid, authenticated_participant_user);
 
       expect(mockPrismaService.answer.findUnique).toHaveBeenCalledTimes(1);
