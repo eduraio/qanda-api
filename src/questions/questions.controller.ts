@@ -6,7 +6,6 @@ import {
   Patch,
   Param,
   Delete,
-  NotFoundException,
   Query,
   UseGuards,
   Req,
@@ -65,9 +64,6 @@ export class QuestionsController {
   @ApiOkResponse({ type: QuestionWithAnsweredFlag })
   async findOne(@Req() request: RequestWithUser, @Param('id') id: string) {
     const question = await this.questionService.findOne(id, request.user.id);
-
-    if (!question) throw new NotFoundException(`Question Not Found (${id})`);
-
     return question;
   }
 
@@ -101,7 +97,6 @@ export class QuestionsController {
   @UseGuards(JwtAuthGuard, RoleGuard)
   @ApiBearerAuth()
   @ApiPaginatedResponse(AnswerEntity)
-  @ApiOkResponse({ type: AnswerEntity, isArray: true })
   async findAnswersByQuestionId(
     @Param('id') id: string,
     @Query() pagination: QuestionAnswersPaginationDto,

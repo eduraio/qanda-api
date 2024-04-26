@@ -1,10 +1,4 @@
-import {
-  HttpException,
-  HttpStatus,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateAnswerDto } from './dto/create-answer.dto';
 import { Prisma } from '@prisma/client';
 import { PaginationResultDto } from '../common/pagination/pagination-result.dto';
@@ -12,6 +6,7 @@ import { AnswerEntity } from './entities/answer.entity';
 import { AnswerPaginationDto } from './dto/answer.pagination';
 import { UpdateAnswerDto } from './dto/update-answer.dto';
 import { UserEntity } from '../users/entities/user.entity';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class AnswersService {
@@ -41,7 +36,7 @@ export class AnswersService {
       },
     });
 
-    if (question.created_by_user_id === authenticated_user_id)
+    if (question && question.created_by_user_id === authenticated_user_id)
       throw new HttpException(
         'User cannot answer their own question',
         HttpStatus.BAD_REQUEST,
@@ -76,14 +71,17 @@ export class AnswersService {
     pagination: AnswerPaginationDto,
     authenticated_user: UserEntity,
   ): Promise<PaginationResultDto<AnswerEntity>> {
-    const where = {
-      ...pagination.where().where,
-      answer_by_user_id:
-        authenticated_user.role === 'PARTICIPANT'
-          ? authenticated_user.id
-          : undefined,
-    };
-    const results: AnswerEntity[] = await this.prismaService.answer.findMany({
+    const where = pagination.where()
+      ? {
+          ...pagination.where().where,
+          answer_by_user_id:
+            authenticated_user.role === 'PARTICIPANT'
+              ? authenticated_user.id
+              : undefined,
+        }
+      : undefined;
+
+    const results = await this.prismaService.answer.findMany({
       include: this.#includeFields,
       where,
       ...pagination.sortBy(),
@@ -96,21 +94,20 @@ export class AnswersService {
   async findOne(id: string, authenticated_user: UserEntity) {
     const answer = await this.prismaService.answer.findUnique({
       where: { id },
+      include: this.#includeFields,
     });
 
     if (
       authenticated_user.role === 'PARTICIPANT' &&
+      answer &&
       answer.answer_by_user_id !== authenticated_user.id
     )
       throw new HttpException(
-        'User can update only their own answers',
+        'User can get only their own answers',
         HttpStatus.UNAUTHORIZED,
       );
 
-    return this.prismaService.answer.findUnique({
-      where: { id },
-      include: this.#includeFields,
-    });
+    return answer;
   }
 
   async update(
@@ -122,9 +119,7 @@ export class AnswersService {
       where: { id },
     });
 
-    if (!answer) throw new NotFoundException(`Answer Not Found (${id})`);
-
-    if (answer.answer_by_user_id !== authenticated_user_id)
+    if (answer && answer.answer_by_user_id !== authenticated_user_id)
       throw new HttpException(
         'User can update only their own answers',
         HttpStatus.UNAUTHORIZED,

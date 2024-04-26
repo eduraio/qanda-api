@@ -7,7 +7,6 @@ import {
   Param,
   Delete,
   NotFoundException,
-  Query,
   UseGuards,
   Req,
 } from '@nestjs/common';
@@ -41,7 +40,7 @@ export class UsersController {
   async findOne(@Req() request: RequestWithUser, @Param('id') id: string) {
     const user = await this.userService.findOne(id, request.user.id);
 
-    if (!user) throw new NotFoundException(`User Not Found (${id})`);
+    if (!user) return;
 
     return {
       ...user,

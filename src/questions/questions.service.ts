@@ -4,7 +4,6 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
 import { Prisma } from '@prisma/client';
@@ -13,6 +12,7 @@ import { QuestionPaginationDto } from './dto/question.pagination';
 import { QuestionAnswersPaginationDto } from './dto/question-answers.pagination';
 import { AnswerEntity } from '../answers/entities/answer.entity';
 import { QuestionEntity } from './entities/question.entity';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class QuestionService {
@@ -45,13 +45,15 @@ export class QuestionService {
       ...pagination.sortBy(),
     });
 
-    const resultsWithAnsweredFlag: QuestionEntity[] = results.map((result) => {
+    const resultsWithAnsweredFlag = results.map((result) => {
       return {
         ...result,
+        answered_by_me: result.answers
+          ? result.answers.some(
+              (answer) => answer.answer_by_user_id === authenticated_user_id,
+            )
+          : false,
         answers: undefined,
-        answered_by_me: result.answers.some(
-          (answer) => answer.answer_by_user_id === authenticated_user_id,
-        ),
       };
     });
 
@@ -64,6 +66,8 @@ export class QuestionService {
       where: { id },
       include: this.#includeFields,
     });
+
+    if (!question) return;
 
     return {
       ...question,
@@ -81,8 +85,6 @@ export class QuestionService {
     const question = await this.prismaService.question.findUnique({
       where: { id },
     });
-
-    if (!question) throw new NotFoundException(`Question Not Found (${id})`);
 
     if (question.created_by_user_id !== authenticated_user_id)
       throw new HttpException(
@@ -102,7 +104,7 @@ export class QuestionService {
       where: { id },
     });
 
-    if (question.created_by_user_id !== authenticated_user_id)
+    if (question && question.created_by_user_id !== authenticated_user_id)
       throw new HttpException(
         'User can delete only their own questions',
         HttpStatus.UNAUTHORIZED,
@@ -114,11 +116,13 @@ export class QuestionService {
     question_id: string,
     pagination: QuestionAnswersPaginationDto,
   ): Promise<PaginationResultDto<AnswerEntity>> {
-    const where = {
-      ...pagination.where().where,
-      question_id,
-    };
-    const results: AnswerEntity[] = await this.prismaService.answer.findMany({
+    const where = pagination.where()
+      ? {
+          ...pagination.where().where,
+          question_id,
+        }
+      : undefined;
+    const results = await this.prismaService.answer.findMany({
       where,
       ...pagination.sortBy(),
     });

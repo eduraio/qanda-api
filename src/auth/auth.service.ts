@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from './../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { AuthEntity } from './entities/auth.entity';
@@ -15,13 +15,19 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({ where: { email: email } });
 
     if (!user) {
-      throw new NotFoundException(`Invalid e-mail and/or password`);
+      throw new HttpException(
+        'Invalid e-mail and/or password',
+        HttpStatus.UNAUTHORIZED,
+      );
     }
 
     const passwordIsCorrect = await bcrypt.compare(password, user.password);
 
     if (!passwordIsCorrect) {
-      throw new NotFoundException(`Invalid e-mail and/or password`);
+      throw new HttpException(
+        'Invalid e-mail and/or password',
+        HttpStatus.UNAUTHORIZED,
+      );
     }
 
     return {

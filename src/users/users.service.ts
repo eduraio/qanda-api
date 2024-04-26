@@ -1,9 +1,9 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { PrismaService } from '../prisma/prisma.service';
 
 const hashRounds = 7;
 
@@ -37,12 +37,19 @@ export class UserService {
     });
   }
 
-  findOne(id: string, authenticated_user_id?: string) {
-    if (authenticated_user_id && id !== authenticated_user_id)
+  findOne(id: string, authenticated_user_id: string) {
+    if (id !== authenticated_user_id)
       throw new HttpException(
         'User can get only their own information',
         HttpStatus.UNAUTHORIZED,
       );
+    return this.prismaService.user.findUnique({
+      where: { id },
+      include: this.#includeFields,
+    });
+  }
+
+  findById(id: string) {
     return this.prismaService.user.findUnique({
       where: { id },
       include: this.#includeFields,

@@ -6,7 +6,6 @@ import {
   Patch,
   Param,
   Delete,
-  NotFoundException,
   Query,
   UseGuards,
   Req,
@@ -42,7 +41,6 @@ export class AnswersController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiPaginatedResponse(AnswerEntity)
-  @ApiOkResponse({ type: AnswerEntity, isArray: true })
   async findAll(
     @Req() request: RequestWithUser,
     @Query() pagination: AnswerPaginationDto,
@@ -56,9 +54,6 @@ export class AnswersController {
   @ApiOkResponse({ type: AnswerEntity })
   async findOne(@Req() request: RequestWithUser, @Param('id') id: string) {
     const answer = await this.answersService.findOne(id, request.user);
-
-    if (!answer) throw new NotFoundException(`Answer Not Found (${id})`);
-
     return answer;
   }
 
