@@ -71,6 +71,7 @@ export class UsersController {
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
+  @ApiOkResponse({ type: UserEntity })
   async remove(@Req() request: RequestWithUser, @Param('id') id: string) {
     const user = await this.userService.remove(id, request.user.id);
     return {

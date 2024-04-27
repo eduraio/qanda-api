@@ -88,6 +88,7 @@ export class QuestionsController {
   @RequiredRole(UserRoles.ORGANIZER)
   @UseGuards(JwtAuthGuard, RoleGuard)
   @ApiBearerAuth()
+  @ApiOkResponse({ type: QuestionEntity })
   async remove(@Req() request: RequestWithUser, @Param('id') id: string) {
     return await this.questionService.remove(id, request.user.id);
   }

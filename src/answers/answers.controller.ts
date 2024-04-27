@@ -76,6 +76,7 @@ export class AnswersController {
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
+  @ApiOkResponse({ type: AnswerEntity })
   async remove(@Req() request: RequestWithUser, @Param('id') id: string) {
     return await this.answersService.remove(id, request.user.id);
   }
